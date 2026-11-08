@@ -25,8 +25,8 @@ export function ZoneChart({ meta, z, s, k, kind }: { meta: Meta; z: Zone; s: Zon
   for (let i = from; i <= k; i++) {
     const v = kind === 'rh' ? s.rh[i] : s.dp[i];
     const p = kind === 'rh' ? s.pred[i] : s.dpp[i];
-    const sd = kind === 'rh' ? (s.sd[i] ?? 0) * 1.2816 : 0.3;
-    data.push({ label: fmtTime(timeAt(meta, i), lang, { day: false, time: true }), v, p, band: p != null ? [p - sd, p + sd] : null, q: s.q[i] });
+    const sd = kind === 'rh' ? (s.sd[i] == null ? null : s.sd[i]! * 1.2816) : 0.3;
+    data.push({ label: fmtTime(timeAt(meta, i), lang, { day: false, time: true }), v, p, band: p != null && sd != null ? [p - sd, p + sd] : null, q: s.q[i] });
   }
   const lim = kind === 'rh' ? z.rh : z.dp;
   const vals = data.flatMap((d) => [d.v, ...(d.band ?? [])]).filter((x) => x != null) as number[];
@@ -45,7 +45,7 @@ export function ZoneChart({ meta, z, s, k, kind }: { meta: Meta; z: Zone; s: Zon
           <ReferenceLine y={lim[1]} stroke={C.limit} strokeDasharray="5 4" label={{ value: `${lim[1]}`, position: 'insideTopRight', fontSize: 11, fill: C.limit }} />
           <ReferenceLine y={lim[0]} stroke={C.limit} strokeDasharray="5 4" label={{ value: `${lim[0]}`, position: 'insideBottomRight', fontSize: 11, fill: C.limit }} />
           {kind === 'rh' && <Area dataKey="band" name={t('band')} stroke="none" fill={C.mint} fillOpacity={0.22} isAnimationActive={false} />}
-          <Line dataKey="p" name={t('forecast_30')} stroke={C.mint} strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={false} connectNulls />
+          <Line dataKey="p" name={t('forecast_30')} stroke={C.mint} strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={false} connectNulls={false} />
           <Line dataKey="v" name={kind === 'rh' ? t('rh') : t('dp')} stroke={C.teal} strokeWidth={2.4} dot={false} isAnimationActive={false} />
           <Tooltip content={<Tip unit={unit} />} />
         </ComposedChart>

@@ -108,3 +108,22 @@ Tes unit memakai storage sementara terpisah; smoke test memakai akun lokal dan m
 Evaluasi fisika sintetis dapat diulang dengan `npx tsx scripts/evaluate-physics.ts`. Pada 1.120 interval dengan frekuensi tetap, MAE 30 menit: suhu 0,104 °C; RH 0,278 poin persen; delta P 0,306 Pa. Karena skenario tanpa perubahan pada model ini setara persistence, angka ini **tidak** membuktikan keunggulan prediksi, akurasi intervensi atau keselamatan pabrik. Hasil rinci tersimpan di .local/physics-evaluation.json.
 
 GET /api/copilot (berautentikasi) memeriksa kesiapan koneksi Ollama dan model. Tombol analisis AI menunggu model tersedia; mode contoh tetap dilabeli tanpa AI.
+
+## Evaluasi prakiraan seperti contoh pitch
+
+Buka /predictions setelah login, atau klik Evaluasi prediksi. Pilih zona, tanggal dan sumber model. Grafik menampilkan aktual sintetis, prakiraan RH 30 menit, dan rentang nominal 80%. Kartu menampilkan RMSE, MAE, coverage dan jumlah pasangan; tabel rinci serta CSV memperlihatkan waktu terbit/target.
+
+Replay: series.pred[k] sudah berasal dari inference pada k-2 (lihat gen_assets.py pada ZIP, sim_files). Interval memakai prediksi ± 1,2815516 × sd. Jangan geser seri prediksi lagi. Nilai registry 0,558/0,479 dan 80,3%/76,7% ditampilkan terpisah sebagai metadata sintetis paket, bukan akurasi PINN yang dijalankan aplikasi.
+
+Model fisika: kondisi awal 30 menit sebelumnya, frekuensi konstan, tanpa melihat RH target. Karena initial equilibrium, baseline ini setara persistence. Horizon dengan perubahan Hz/tahap kritis dikecualikan. Radius interval dipilih dari residual per zona selama 14 hari pertama dan dibekukan untuk holdout 14 hari berikutnya. Tidak ada pelatihan jaringan saraf. Ketergantungan deret waktu membuat target 80% bukan jaminan coverage. Ini interval evaluasi, bukan safety envelope simulator.
+
+Contoh hitung ulang A1, 29 September 2026:
+- Replay: n=96, RMSE 0,470698 poin %RH, MAE 0,37125, coverage 78,125%.
+- Fisika baseline: n=89, RMSE 0,455000 poin %RH, MAE 0,347865, coverage 73,0337%.
+- Kalibrasi fisika: 1.342 residual, radius 0,45 poin %RH.
+
+Populasi kedua mode berbeda; selisih RMSE bukan bukti keunggulan model. Coverage fisika hari tersebut berada di bawah nominal dan perlu ditinjau. Evaluasi ini tidak menunjukkan performa intervensi atau pabrik nyata.
+
+Referensi batas asumsi coverage: Barber et al., Conformal prediction beyond exchangeability, https://arxiv.org/abs/2202.13415. Implementasi MVP hanya memakai kuantil residual sederhana, bukan metode weighted/adaptive dalam paper tersebut.
+
+Pengujian terbaru: 15 tes lulus, termasuk penyelarasan horizon, denominasi coverage, larangan data holdout masuk kalibrasi, dan interval/data hilang.

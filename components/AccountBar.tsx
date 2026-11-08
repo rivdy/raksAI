@@ -9,7 +9,7 @@ export default function AccountBar() {
     catch {setError('Logout gagal. Coba lagi.');}
   }
   return <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-line bg-white p-3 text-sm">
-    <Link className="font-semibold underline" href="/lab">Lab fisika & BMS</Link><Link className="underline" href="/copilot">AI & SOP</Link>
+    <Link className="font-semibold underline" href="/lab">Lab fisika & BMS</Link><Link className="underline" href="/copilot">AI & SOP</Link><Link className="underline" href="/predictions">Evaluasi prediksi</Link>
     <span className="ml-auto">Akun: {user?.username ?? '…'} · {user?.role ?? '…'}</span><button className="underline" onClick={exit}>Keluar</button>
     {error&&<span role="alert">{error}</span>}
   </div>;
