@@ -1,23 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import DocumentsPanel from '@/components/DocumentsPanel';
 import { useStore } from '@/lib/store';
 import { useData, type Meta } from '@/lib/data';
 
 export default function CopilotPage() {
   const { replayK } = useStore();
   const { data: meta, error: dataError } = useData<Meta>('meta.json');
+  const [health,setHealth]=useState<any>(null);
+  async function refreshHealth(){try{const r=await fetch('/api/copilot');const v=await r.json();setHealth(r.ok?v:{ready:false,message:v.error});}catch{setHealth({ready:false,message:'Server lokal tidak terhubung.'});}}
+  useEffect(()=>{refreshHealth();},[]);
+  const [source, setSource] = useState('bms');
   const [zone, setZone] = useState('A3');
   const [question, setQuestion] = useState('Jelaskan kondisi zona ini dan pemeriksaan yang perlu dilakukan Engineering.');
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState('');
   const k = replayK ?? meta?.snapshot_k;
-  const stale = result && (result.context.zone !== zone || result.context.k !== k);
+  const stale = result && (result.context.zone !== zone || (source === 'replay' && result.context.k !== k));
   async function analyze(demo: boolean) {
     setBusy(true); setError(''); setResult(null);
     try {
       const response = await fetch('/api/copilot', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ zone, k, question, demo }), signal: AbortSignal.timeout(55000) });
+        body: JSON.stringify({ zone, k, question, demo, source }), signal: AbortSignal.timeout(190000) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Analisis gagal.');
       setResult(body);
@@ -27,18 +32,18 @@ export default function CopilotPage() {
   return <div className="mx-auto max-w-4xl space-y-6">
     <div><p className="text-sm font-semibold text-teal-700">RUAIX / AI COPILOT</p>
       <h1 className="mt-2 text-3xl font-semibold text-ink">Dari data zona ke langkah pemeriksaan.</h1>
-      <p className="mt-3 text-steel">Tanyakan kondisi HVAC pada waktu replay yang dipilih. Jawaban AI disertai rujukan sensor, batas zona, dan keputusan gate.</p></div>
+      <p className="mt-3 text-steel">Tanyakan kondisi simulator atau dataset replay. AI lokal menjelaskan sensor, prediksi fisika, dan referensi SOP.</p></div>
     <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-      Data simulasi, bukan hasil pabrik. Copilot memberi saran pemeriksaan untuk Engineering/QA; tidak menjalankan perintah BMS.
+      Data simulasi, bukan hasil pabrik. Copilot memberi saran pemeriksaan untuk Engineering/QA; perubahan simulator BMS hanya dilakukan melalui persetujuan QA di Lab.
     </div>
-    <form className="space-y-4 rounded-2xl border border-line bg-white p-6" onSubmit={e => { e.preventDefault(); analyze(false); }}>
+    <div role="status" className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-white p-3 text-sm"><span>{health?.message ?? 'Memeriksa Ollama…'} {health?.model}</span><button type="button" className="underline" onClick={refreshHealth}>Periksa lagi</button></div><DocumentsPanel/><form className="space-y-4 rounded-2xl border border-line bg-white p-6" onSubmit={e => { e.preventDefault(); analyze(false); }}>
       <div className="flex flex-wrap items-end gap-4">
-        <label className="block text-sm font-medium">Zona
+        <label className="block text-sm font-medium">Sumber<select value={source} disabled={busy} onChange={e => {setSource(e.target.value);setResult(null);}} className="mt-2 block rounded-lg border border-line p-3"><option value="bms">Simulator BMS saat ini</option><option value="replay">Dataset replay</option></select></label><label className="block text-sm font-medium">Zona
           <select disabled={busy || !meta} className="mt-2 block rounded-lg border border-line p-3" value={zone} onChange={e => { setZone(e.target.value); setError(''); }}>
             {(meta?.zones ?? []).map(z => <option key={z.code} value={z.code}>{z.code} — {z.name_id}</option>)}
           </select>
         </label>
-        <p className="pb-3 text-sm text-steel">Snapshot replay: {k ?? 'memuat…'} · interval 15 menit</p>
+        <p className="pb-3 text-sm text-steel">Indeks replay: {k ?? 'memuat…'} · interval 15 menit</p>
       </div>
       <label className="block text-sm font-medium">Pertanyaan
         <textarea required maxLength={1200} disabled={busy} rows={3} value={question} onChange={e => setQuestion(e.target.value)}
@@ -49,16 +54,16 @@ export default function CopilotPage() {
           <button type="button" disabled={busy} key={q} onClick={() => setQuestion(q)} className="rounded-full border border-line px-3 py-2 text-xs hover:bg-mist">{q}</button>)}
       </div>
       <div className="flex flex-wrap gap-3">
-        <button disabled={busy || !meta || !question.trim()} className="rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? 'Memproses…' : 'Analisis dengan AI'}</button>
+        <button disabled={busy || !meta || !question.trim() || !health?.ready} className="rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? 'Memproses…' : 'Analisis dengan AI lokal'}</button>
         <button type="button" disabled={busy || !meta || !question.trim()} onClick={() => analyze(true)} className="rounded-lg border border-line px-5 py-3 text-sm disabled:opacity-50">Lihat contoh demo (tanpa AI)</button>
       </div>
-      <p className="text-xs text-steel">Analisis AI mengirim pertanyaan dan snapshot zona ke OpenAI. Contoh demo hanya menjalankan aturan lokal.</p>
+      <p className="text-xs text-steel">Analisis memakai Ollama lokal dan rujukan SOP yang ditemukan. Tidak ada panggilan API berbayar. Model lokal dapat memerlukan beberapa menit.</p>
     </form>
     {(error || dataError) && <div role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error || dataError}</div>}
     {busy && <p role="status" className="text-sm text-steel">Menyiapkan bukti dan analisis…</p>}
     {result && <section aria-live="polite" className="space-y-5 rounded-2xl border border-line bg-white p-6">
       <div className="flex flex-wrap gap-2 text-xs font-semibold">
-        <span className="rounded bg-mist px-3 py-2">{result.mode === 'demo' ? 'DEMO BERBASIS ATURAN · BUKAN AI' : 'OPENAI · ' + result.model}</span>
+        <span className="rounded bg-mist px-3 py-2">{result.mode === 'demo' ? 'DEMO BERBASIS ATURAN · BUKAN AI' : 'OLLAMA LOKAL · ' + result.model}</span>
         <span className="rounded bg-amber-50 px-3 py-2">Pemeriksaan aplikasi: {result.context.assessment}</span>
       </div>
       <p className="text-xs text-steel">Zona {result.context.zone} · {new Date(result.context.at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB</p>
@@ -72,7 +77,7 @@ export default function CopilotPage() {
       <ol className="list-decimal space-y-2 pl-5">{result.answer.checks.map((s: string, i: number) => <li key={i}>{s}</li>)}</ol>
       <h3 className="font-semibold">Batasan analisis</h3>
       <ul className="list-disc space-y-2 pl-5 text-sm text-steel">{result.answer.limitations.map((s: string, i: number) => <li key={i}>{s}</li>)}</ul>
-      <details className="border-t border-line pt-4"><summary className="cursor-pointer font-semibold">Lihat data sumber</summary>
+      <details open className="border-t border-line pt-4"><summary className="cursor-pointer font-semibold">Lihat data sumber</summary>
         {result.context.sources.map((s: any) => <div key={s.id} id={'source-' + s.id} className="mt-4">
           <p className="text-sm font-semibold">[{s.id}] {s.file} · {s.detail}</p>
           <pre className="mt-2 overflow-auto rounded-lg bg-mist p-3 text-xs">{JSON.stringify(s.data, null, 2)}</pre>

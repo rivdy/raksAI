@@ -98,7 +98,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           <span className="hidden items-center gap-1 rounded-md bg-info-bg px-2 py-1 text-[12px] font-medium text-info sm:inline-flex"><FlaskConical className="h-3.5 w-3.5" />{t('sim_badge')}</span>
           <div className="ml-auto flex items-center gap-2">
             <label className="flex items-center gap-2 text-[12.5px] text-steel">
-              <span className="hidden md:inline">{t('role')}</span>
+              <span className="hidden md:inline">Persona demo</span>
               <select value={persona?.user_id ?? ''} onChange={(e) => meta && setPersona(meta.personas.find((p) => p.user_id === e.target.value)!)}
                 className="max-w-[220px] rounded-lg border border-line bg-white px-2 py-1.5 text-[13px] text-ink">
                 {meta?.personas.map((p) => <option key={p.user_id} value={p.user_id}>{p.full_name.replace(/, S\.Farm\./, '')} · {p.role === 'ENGINEERING' ? 'Engineering' : p.role === 'PLANT_MANAGER' ? 'Plant manager' : p.role}</option>)}

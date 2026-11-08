@@ -1,42 +1,51 @@
-import { NextResponse } from 'next/server';
-import { buildContext, CopilotError, demoAnswer, generateAnswer, loadDataset, validateInput } from '@/lib/copilot';
-
-export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
-let inFlight = 0;
-const headers = { 'Cache-Control': 'no-store' };
-export async function POST(request: Request) {
-  try {
-    const origin = request.headers.get('origin');
-    if (origin && origin !== new URL(request.url).origin) throw new CopilotError(403, 'Origin tidak diizinkan.');
-    if (!request.headers.get('content-type')?.includes('application/json')) throw new CopilotError(415, 'Gunakan application/json.');
-    if (Number(request.headers.get('content-length')) > 8192) throw new CopilotError(413, 'Input terlalu besar.');
-    const reader = request.body?.getReader();
-    if (!reader) throw new CopilotError(400, 'Input kosong.');
-    const chunks: Uint8Array[] = []; let size = 0;
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      size += value.length;
-      if (size > 8192) { await reader.cancel(); throw new CopilotError(413, 'Input terlalu besar.'); }
-      chunks.push(value);
+import { buildContext, demoAnswer, loadDataset, validateInput, type Context } from '@/lib/copilot';
+import { requireUser } from '@/lib/auth';
+import { body,fail,json,HttpError } from '@/lib/http';
+import { retrieveSops } from '@/lib/documents';
+import { localAnswer,ollamaBase } from '@/lib/ollama';
+import { bmsSnapshot } from '@/lib/bms';
+import { forecast } from '@/lib/physics';
+export const runtime='nodejs';
+export const dynamic='force-dynamic';
+const runtimeState=globalThis as typeof globalThis & {ruaixInferenceBusy?:boolean};
+export async function POST(request:Request){
+  try{
+    requireUser(request);
+    const raw=await body(request),input=validateInput(raw);
+    if(raw.source!==undefined&&!['replay','bms'].includes(raw.source))throw new HttpError(400,'Sumber data tidak valid.');
+    const data=await loadDataset();
+    const context:Context=buildContext(data,input.zone,input.k);
+    if(raw.source==='bms'){
+      const simulator=await bmsSnapshot(),z=simulator.zones[input.zone];
+      context.at=z.at;context.assessment=z.recordedAssessment;
+      context.sources[1]={id:'sensor',file:'BMS simulator',detail:'Versi '+z.version+' · '+z.at,data:z.reading};
+      context.sources[2]={id:'gate',file:'BMS simulator',detail:'Gate awal replay; belum merupakan persetujuan usulan baru',data:{decision:z.recordedAssessment,mode:z.mode,version:z.version}};
     }
-    let raw: unknown;
-    try { raw = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
-    catch { throw new CopilotError(400, 'JSON tidak valid.'); }
-    const input = validateInput(raw);
-    const context = buildContext(await loadDataset(), input.zone, input.k);
-    if (input.demo) return NextResponse.json({ mode: 'demo', context, answer: demoAnswer(context) }, { headers });
-    if (!process.env.OPENAI_API_KEY) throw new CopilotError(503, 'API key belum dikonfigurasi. Isi OPENAI_API_KEY di .env.local atau gunakan contoh demo.');
-    if (inFlight >= 2) throw new CopilotError(429, 'Dua analisis sedang berjalan. Coba lagi sebentar.');
-    inFlight++;
-    try {
-      const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
-      const answer = await generateAnswer(context, input.question, { apiKey: process.env.OPENAI_API_KEY, model });
-      return NextResponse.json({ mode: 'live', model, context, answer }, { headers });
-    } finally { inFlight--; }
-  } catch (error) {
-    return NextResponse.json({ error: error instanceof CopilotError ? error.message : 'Analisis gagal. Periksa data aplikasi di server.' },
-      { status: error instanceof CopilotError ? error.status : 500, headers });
-  }
+    const initial=context.sources[1].data,zone=data[0].zones.find((z:any)=>z.code===input.zone);
+    if([initial.temperature_c,initial.rh_pct,initial.dp_pa,initial.fan_hz].every(x=>typeof x==='number'&&Number.isFinite(x))&&initial.fan_hz>0){
+      const physics=forecast(zone,initial,Math.max(zone.hz_min,initial.fan_hz-1));
+      context.sources.push({id:'physics',file:'lumped-balance-v1',detail:'Skenario fan -1 Hz; prediksi baru dari model fisika, bukan rekaman',data:{...physics,trajectory:undefined}});
+    }
+    context.sources.push(...await retrieveSops(input.question));
+    if(input.demo)return json({mode:'demo',context,answer:demoAnswer(context)});
+    if(runtimeState.ruaixInferenceBusy)throw new HttpError(429,'Model lokal sedang menganalisis. Coba setelah analisis selesai.');
+    runtimeState.ruaixInferenceBusy=true;
+    try{
+      const {answer,model}=await localAnswer(context,input.question);
+      return json({mode:'local',model,context,answer});
+    }finally{runtimeState.ruaixInferenceBusy=false;}
+  }catch(e){return fail(e);}
+}
+
+export async function GET(request:Request){
+  try{
+    requireUser(request);
+    const model=process.env.OLLAMA_MODEL||'qwen3:1.7b';
+    try{
+      const response=await fetch(ollamaBase()+'/api/tags',{signal:AbortSignal.timeout(3000),cache:'no-store'});
+      if(!response.ok)return json({ready:false,model,message:'Ollama belum siap.'});
+      const tags=await response.json(),ready=Array.isArray(tags.models)&&tags.models.some((m:any)=>m.name===model);
+      return json({ready,model,message:ready?'Model lokal siap.':'Model belum tersedia. Selesaikan ollama pull '+model});
+    }catch{return json({ready:false,model,message:'Ollama tidak terhubung. Jalankan aplikasi Ollama.'});}
+  }catch(e){return fail(e);}
 }
