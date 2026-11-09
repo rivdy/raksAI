@@ -1,25 +1,62 @@
 'use client';
+import Link from 'next/link';
 import { useState } from 'react';
+import { ArrowUpRight } from 'lucide-react';
+import { Logo } from '@/components/Shell';
+import AirflowBackdrop from '@/components/AirflowBackdrop';
+import './login.css';
+
+const ROLES = [
+  ['engineering', 'Membuat usulan setpoint, mengunggah SOP, memuat replay.'],
+  ['qa', 'Meninjau usulan akun lain, menulis alasan, menyetujui ke simulator.'],
+  ['viewer', 'Membaca data, dokumen, dan analisis. Tidak bisa mengubah apa pun.'],
+];
+
 export default function Login() {
-  const [error,setError]=useState(''), [busy,setBusy]=useState(false);
+  const [error, setError] = useState(''), [busy, setBusy] = useState(false);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError('');
     const fields = new FormData(event.currentTarget);
     try {
-      const response=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:fields.get('username'),password:fields.get('password')})});
-      const result=await response.json(); if(!response.ok) throw new Error(result.error);
+      const response = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: fields.get('username'), password: fields.get('password') }) });
+      const result = await response.json(); if (!response.ok) throw new Error(result.error);
       window.location.assign('/lab');
-    } catch(e) {setError(e instanceof Error?e.message:'Login gagal.');} finally {setBusy(false);}
+    } catch (e) { setError(e instanceof Error ? e.message : 'Login gagal.'); } finally { setBusy(false); }
   }
-  return <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-6">
-    <p className="font-semibold text-teal-700">RUAIX · LOCAL MVP</p><h1 className="mt-3 text-3xl font-semibold">Masuk ke ruang kendali.</h1>
-    <p className="my-4 text-steel">Engineering membuat usulan. QA meninjau dan menyetujui perubahan pada simulator BMS.</p>
-    <form onSubmit={submit} className="space-y-4 rounded-xl border border-line bg-white p-6">
-      <label className="block">Nama pengguna<input name="username" required autoComplete="username" className="mt-2 w-full rounded border p-3"/></label>
-      <label className="block">Password<input name="password" type="password" required autoComplete="current-password" className="mt-2 w-full rounded border p-3"/></label>
-      {error&&<p role="alert" className="text-red-700">{error}</p>}
-      <button disabled={busy} className="w-full rounded bg-ink p-3 font-semibold text-white disabled:opacity-50">{busy?'Memeriksa…':'Masuk'}</button>
-    </form>
-    <p className="mt-4 text-sm text-steel">Gunakan akun lokal hasil setup. Semua koneksi BMS pada MVP ini adalah simulasi.</p>
-  </main>;
+  return <div className="lg">
+    {/* ruang bersih 3D: garis hijau tua, sebagian aliran udara hijau aksen */}
+    <AirflowBackdrop className="lg-backdrop" center={0.7} scale={0.72} lineAlpha={0.24} ink="21,60,53" accent="22,130,103" />
+
+    <header className="lg-top">
+      <Link href="/" aria-label="RUAIX"><Logo dark={false} /></Link>
+      <Link href="/" className="lg-back">← Beranda</Link>
+    </header>
+
+    <main className="lg-card">
+      <div className="lg-eyebrow"><span className="lg-dot" /> Akun lokal</div>
+      <h1>Masuk ke<br /><span>ruang kendali.</span></h1>
+
+      <form onSubmit={submit} className="lg-form">
+        <label>Nama pengguna
+          <input name="username" required autoComplete="username" />
+        </label>
+        <label>Kata sandi
+          <input name="password" type="password" required autoComplete="current-password" />
+        </label>
+        {error && <p role="alert" className="lg-error">{error}</p>}
+        <button disabled={busy} className="lg-submit">{busy ? 'Memeriksa…' : <>Masuk <ArrowUpRight size={18} /></>}</button>
+      </form>
+      <p className="lg-hint">Kata sandi dibuat saat <code>npm run setup:local</code> dan tersimpan di <code>.local/access.txt</code>.</p>
+
+      <section className="lg-roles" aria-label="Peran akun">
+        <div className="lg-eyebrow">Tiga peran</div>
+        <dl>
+          {ROLES.map(([role, text]) => <div key={role}><dt>{role}</dt><dd>{text}</dd></div>)}
+        </dl>
+        <p className="lg-note">Usulan tidak bisa disetujui oleh akun yang sama yang membuatnya. Semua perintah BMS pada prototipe ini berjalan di simulator.</p>
+      </section>
+    </main>
+
+    <p className="lg-caption">Ilustrasi · aliran udara laminar dari HEPA ke grill return</p>
+  </div>;
 }
