@@ -1,141 +1,88 @@
 'use client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import clsx from 'clsx';
-import { Gauge, LineChart, SlidersHorizontal, ShieldCheck, PenLine, Server, Lock, FlaskConical, ClipboardCheck, HardHat, Wallet, Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUpRight, ArrowRight, Wind, ShieldCheck, Activity, FileText, Check, Pause, Play } from 'lucide-react';
 import { Logo } from '@/components/Shell';
+import AirflowBackdrop from '@/components/AirflowBackdrop';
 import { useStore } from '@/lib/store';
-import { useData, type Meta } from '@/lib/data';
+import './landing.css';
 
-const COPY = {
-  en: {
-    h1: 'Save cleanroom energy without putting a batch at risk.',
-    lead: 'RUAIX forecasts humidity and pressure 30 minutes ahead and proposes leaner HVAC settings. A deterministic safety gate checks each proposal, and nothing reaches the BMS without a signed approval. Every step is sealed for the auditor.',
-    cta2: 'See how it works',
-    chain: ['Sensors', 'Forecast', 'Proposal', 'Safety gate', 'Signed approval', 'BMS', 'Sealed record'],
-    chainNote: 'One decision, end to end. Open any decision in the prototype to see this chain with real values and hashes.',
-    who: 'Start where your work starts',
-    personas: {
-      QA: ['QA pharmacist', 'Review held decisions, sign or reject proposals, and close CAPA.', '/approvals'],
-      ENGINEERING: ['HVAC engineer', 'See forecasts per zone and approve energy-saving setpoints.', '/dashboard'],
-      CFO: ['CFO', 'See verified savings, the energy share, and the payback for a plant.', '/energy'],
-      AUDITOR: ['Auditor', 'Verify the hash-sealed record and trace any decision to its source.', '/audit'],
-    } as Record<string, [string, string, string]>,
-    painH: 'What blocks plants today, and what changes',
-    pains: [
-      ['QA vetoes every energy change, because nobody can prove it is safe.', 'Each proposal passes four deterministic checks and needs a signed approval. Pass, Review or Hold, with the reason in plain words.'],
-      ['Deviations take weeks to investigate, from paper and BMS exports.', 'Every reading, forecast, decision and command is linked. CAPA starts from an AI draft that QA must review.'],
-      ['Energy claims are not trusted by finance.', 'Savings are measured against an IPMVP baseline adjusted for weather and production, then verified weekly.'],
-      ['AI in a GMP plant feels like a black box.', 'Models are frozen and versioned under change control, autonomy rises one mode at a time, and any fault falls back to the BMS.'],
-    ],
-    foot: 'Prototype with a simulated 28-day pilot (fictional plant, 8 zones, 20 AHUs). Numbers are illustrative, not plant results.',
-  },
-  id: {
-    h1: 'Hemat energi cleanroom tanpa mempertaruhkan satu batch pun.',
-    lead: 'RUAIX meramal kelembapan dan tekanan 30 menit ke depan lalu mengusulkan setelan HVAC yang lebih hemat. Safety gate deterministik memeriksa setiap usulan, dan tidak ada yang sampai ke BMS tanpa persetujuan bertanda tangan. Setiap langkah disegel untuk auditor.',
-    cta2: 'Lihat cara kerjanya',
-    chain: ['Sensor', 'Prakiraan', 'Usulan', 'Safety gate', 'Persetujuan', 'BMS', 'Catatan tersegel'],
-    chainNote: 'Satu keputusan dari ujung ke ujung. Buka keputusan mana pun di prototipe untuk melihat rantai ini dengan nilai dan hash nyata.',
-    who: 'Mulai dari pekerjaan Anda',
-    personas: {
-      QA: ['Apoteker QA', 'Tinjau keputusan TAHAN, setujui atau tolak usulan, dan tutup CAPA.', '/approvals'],
-      ENGINEERING: ['Engineer HVAC', 'Lihat prakiraan per zona dan setujui setpoint hemat energi.', '/dashboard'],
-      CFO: ['CFO', 'Lihat penghematan terverifikasi, bagi hasil, dan balik modal per pabrik.', '/energy'],
-      AUDITOR: ['Auditor', 'Verifikasi catatan bersegel hash dan telusuri keputusan sampai sumbernya.', '/audit'],
-    } as Record<string, [string, string, string]>,
-    painH: 'Penghambat pabrik hari ini, dan apa yang berubah',
-    pains: [
-      ['QA memveto setiap perubahan energi karena tidak ada yang bisa membuktikan aman.', 'Setiap usulan melewati empat pemeriksaan deterministik dan butuh persetujuan bertanda tangan. LULUS, TINJAU, atau TAHAN, dengan alasan yang mudah dipahami.'],
-      ['Investigasi deviasi makan berminggu-minggu dari kertas dan ekspor BMS.', 'Setiap pembacaan, prakiraan, keputusan, dan perintah saling tertaut. CAPA dimulai dari draf AI yang wajib ditinjau QA.'],
-      ['Klaim penghematan tidak dipercaya bagian keuangan.', 'Penghematan diukur terhadap baseline IPMVP yang disesuaikan cuaca dan produksi, lalu diverifikasi mingguan.'],
-      ['AI di pabrik CPOB terasa seperti kotak hitam.', 'Model dibekukan dan berversi lewat change control, otonomi naik satu mode demi satu, dan setiap gangguan kembali ke BMS.'],
-    ],
-    foot: 'Prototipe dengan pilot simulasi 28 hari (pabrik fiktif, 8 zona, 20 AHU). Angka bersifat ilustrasi, bukan hasil pabrik.',
-  },
-};
-const CHAIN_ICONS = [Gauge, LineChart, SlidersHorizontal, ShieldCheck, PenLine, Server, Lock];
-const P_ICONS: Record<string, any> = { QA: ClipboardCheck, ENGINEERING: HardHat, CFO: Wallet, AUDITOR: Search };
-
+const stages = [
+  { title: 'Baca kondisi.', en: 'Read the room.', text: 'Sensor suhu, kelembapan, dan tekanan menjadi titik awal prakiraan fisika 30 menit ke depan.', english: 'Temperature, humidity, and pressure readings inform a 30-minute physics forecast.', label: '01 / SENSOR & FORECAST', value: '49.4', unit: '% RH', detail: 'Kelembapan zona A1 · ilustrasi', detailEn: 'Zone A1 humidity · illustration' },
+  { title: 'Uji usulan.', en: 'Test the proposal.', text: 'Bandingkan energi kipas pada setelan awal dan usulan. Safety gate memeriksa batas kondisi sebelum QA meninjau.', english: 'Compare baseline and proposed fan energy. The safety gate checks room limits before QA review.', label: '02 / PROPOSAL & SAFETY', value: '42', unit: 'Hz', detail: 'Usulan dari 43 Hz · ilustrasi', detailEn: 'Proposed from 43 Hz · illustration' },
+  { title: 'Manusia memutuskan.', en: 'People decide.', text: 'Engineering mengusulkan, QA menyetujui. Perubahan diterapkan ke simulator BMS dan dicatat dalam jejak audit lokal.', english: 'Engineering proposes, QA approves. Changes go to the BMS simulator and enter the local audit trail.', label: '03 / QA & BMS SIMULATOR', value: 'QA', unit: 'review', detail: 'Persetujuan diperlukan', detailEn: 'Approval required' },
+];
 export default function Home() {
-  const { lang, setLang, setPersona, t } = useStore();
-  const { data: meta } = useData<Meta>('meta.json');
-  const router = useRouter();
-  const c = COPY[lang];
-  const start = (role: string) => {
-    const p = meta?.personas.find((x) => x.role === role);
-    if (p) setPersona(p);
-    router.push(c.personas[role][2]);
-  };
-  return (
-    <div className="min-h-screen bg-white">
-      <header className="mx-auto flex max-w-[1180px] items-center justify-between px-6 py-5">
-        <Logo dark={false} />
-        <div className="flex items-center gap-3">
-          <span className="hidden items-center gap-1 rounded-md bg-info-bg px-2 py-1 text-[12px] font-medium text-info sm:inline-flex"><FlaskConical className="h-3.5 w-3.5" />{t('sim_badge')}</span>
-          <div className="flex overflow-hidden rounded-lg ring-1 ring-line">
-            {(['en', 'id'] as const).map((l) => <button key={l} onClick={() => setLang(l)} aria-pressed={lang === l} className={clsx('px-2.5 py-1.5 text-[12px] font-semibold', lang === l ? 'bg-ink text-white' : 'text-steel')}>{l.toUpperCase()}</button>)}
+  const { lang, setLang } = useStore();
+  const id = lang === 'id';
+  const [stage, setStage] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    }), { threshold: .12 });
+    root.current?.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+  const current = stages[stage];
+  return <div ref={root} className={`landing ${paused ? 'motion-paused' : ''}`}>
+    <header className="landing-nav">
+      <Link href="/" aria-label="RUAIX home"><Logo dark={false} /></Link>
+      <nav aria-label={id ? 'Navigasi utama' : 'Main navigation'}><a href="#workflow">{id ? 'Cara kerja' : 'How it works'}</a><a href="#explore">{id ? 'Jelajahi MVP' : 'Explore MVP'}</a></nav>
+      <div className="nav-actions"><button className="language-toggle" onClick={() => setLang(id ? 'en' : 'id')} aria-label={id ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}>{id ? 'EN' : 'ID'}</button><Link className="nav-login" href="/login">{id ? 'Masuk' : 'Sign in'} <ArrowUpRight size={15} /></Link></div>
+    </header>
+    <main>
+      <section className="landing-hero">
+        <div className="hero-copy">
+          <div className="eyebrow hero-enter"><span className="status-dot" /> ENERGY INTELLIGENCE / HUMAN CONTROL</div>
+          <h1 className="hero-enter delay-one">{id ? 'Energi lebih bijak.' : 'Smarter energy.'}<br /><span>{id ? 'Kendali tetap' : 'Control stays'}<br />{id ? 'di tangan Anda.' : 'in your hands.'}</span></h1>
+          <p className="hero-description hero-enter delay-two">{id ? 'Temukan peluang hemat energi HVAC cleanroom. Prakirakan kondisi, uji batas keselamatan, lalu putuskan bersama QA.' : 'Explore cleanroom HVAC energy savings. Forecast conditions, check safety limits, then decide with QA.'}</p>
+          <div className="hero-actions hero-enter delay-two"><Link className="landing-button primary" href="/lab">{id ? 'Buka ruang kendali' : 'Open control room'} <ArrowUpRight size={19} /></Link><a className="text-link" href="#workflow">{id ? 'Lihat cara kerja' : 'See how it works'} <ArrowRight size={17} /></a></div>
+          <div className="hero-note hero-enter delay-two"><ShieldCheck size={16} /> {id ? 'MVP lokal · Simulator BMS · Persetujuan manusia' : 'Local MVP · BMS simulator · Human approval'}</div>
+        </div>
+        <div className="hero-visual hero-enter delay-one">
+          <div className="visual-orbit" aria-hidden="true" />
+          <div className="control-panel">
+            <div className="panel-top"><span><span className="status-dot" /> AERO-SENTINEL AX</span><span className="demo-tag">DEMO</span></div>
+            <figure className="landing-airflow">
+              <AirflowBackdrop className="landing-airflow-canvas" scale={1.1} lineAlpha={0.5} particleAlpha={0.75} ink="200,236,219" accent="161,246,206" speed={stage === 1 ? 42 / 43 : 1} sway={0.22} paused={paused} />
+              <figcaption>{id ? 'Ilustrasi aliran udara ? HEPA ? return' : 'Airflow illustration ? HEPA ? return'}</figcaption>
+            </figure>
+            <div className="panel-label">{current.label}</div>
+            <div key={stage} className="panel-reading"><strong>{current.value}</strong><span>{current.unit}</span></div>
+            <p className="panel-detail">{id ? current.detail : current.detailEn}</p>
+            <div className="chart-caption"><span>{id ? 'Prakiraan kelembapan' : 'Humidity forecast'}</span><span>+30 MIN</span></div>
+            <svg className="hero-chart" viewBox="0 0 420 150" role="img" aria-label={id ? 'Ilustrasi grafik prakiraan kelembapan; bukan data langsung' : 'Illustrative humidity forecast; not live data'}>
+              <defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#a1f6ce" stopOpacity=".24"/><stop offset="100%" stopColor="#a1f6ce" stopOpacity="0"/></linearGradient></defs>
+              {[25,65,105,145].map(y => <path key={y} d={`M0 ${y}H420`} stroke="white" strokeOpacity=".08"/>)}
+              <path d="M0 99L28 92L52 104L82 66L108 78L135 62L160 77L188 53L213 66L240 50L265 59L290 43L316 55L345 48L372 59L420 45V150H0Z" fill="url(#chart-fill)"/>
+              <path className="forecast-line" d="M0 99L28 92L52 104L82 66L108 78L135 62L160 77L188 53L213 66L240 50L265 59L290 43L316 55L345 48L372 59L420 45" fill="none" stroke="#a1f6ce" strokeWidth="2.5" pathLength="1"/>
+              <path d="M240 0V150" stroke="#a1f6ce" strokeOpacity=".35" strokeDasharray="4 6"/>
+              <circle className="chart-pulse" cx="240" cy="50" r="5" fill="#b8ffdb"/>
+            </svg>
+            <div className="chart-axis"><span>14:00</span><span>14:15</span><span>14:30</span></div>
+            <div className="panel-bottom"><ShieldCheck size={17}/><span>{id ? 'Safety gate sebelum setiap perubahan' : 'Safety gate before every change'}</span></div>
           </div>
-        </div>
-      </header>
-
-      <section className="mx-auto max-w-[1180px] px-6 pb-12 pt-8">
-        <h1 className="max-w-[17ch] text-[40px] font-semibold leading-[1.08] tracking-[-0.02em] sm:text-[52px]">{c.h1}</h1>
-        <p className="mt-5 max-w-[66ch] text-[16.5px] leading-relaxed text-steel">{c.lead}</p>
-        <div className="mt-7 flex flex-wrap gap-3">
-          <Link href="/dashboard" className="rounded-lg bg-teal px-5 py-3 text-[15px] font-semibold text-white hover:bg-teal-600">{t('home_cta')}</Link>
-          <Link href="/how-it-works" className="rounded-lg px-5 py-3 text-[15px] font-semibold text-ink ring-1 ring-line hover:bg-mist">{c.cta2}</Link>
-        </div>
-
-        <figure className="mt-12 rounded-2xl bg-ink p-5 text-white sm:p-7">
-          <ol className="grid grid-cols-2 gap-y-5 sm:grid-cols-4 lg:grid-cols-7">
-            {c.chain.map((s, i) => {
-              const Icon = CHAIN_ICONS[i];
-              return (
-                <li key={s} className="relative flex flex-col items-center text-center">
-                  {i < c.chain.length - 1 && <span aria-hidden className="absolute left-[calc(50%+26px)] right-[calc(-50%+26px)] top-[22px] hidden h-px bg-mint/50 lg:block" />}
-                  <span className={clsx('flex h-11 w-11 items-center justify-center rounded-xl', i === 3 ? 'bg-mint text-ink' : 'bg-white/10 text-mint')}><Icon className="h-5 w-5" /></span>
-                  <span className="mt-2 text-[13px] font-medium">{s}</span>
-                  <span className="mt-0.5 text-[11px] text-[#8FB0B4] num">{['RH 49.4 %', '+30 min', '47 → 43 Hz', 'Pass', 'e-sign', 'ACK 2.1 s', 'sha-256'][i]}</span>
-                </li>
-              );
-            })}
-          </ol>
-          <figcaption className="mt-6 border-t border-white/10 pt-4 text-[13px] text-[#C3D6D8]">{c.chainNote}</figcaption>
-        </figure>
-      </section>
-
-      <section className="border-y border-line bg-mist">
-        <div className="mx-auto max-w-[1180px] px-6 py-12">
-          <h2 className="text-[22px] font-semibold">{c.who}</h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Object.entries(c.personas).map(([role, [title, job]]) => {
-              const Icon = P_ICONS[role];
-              const p = meta?.personas.find((x) => x.role === role);
-              return (
-                <button key={role} onClick={() => start(role)} className="group rounded-xl bg-white p-5 text-left shadow-card transition-shadow hover:shadow-pop">
-                  <Icon className="h-6 w-6 text-teal" />
-                  <div className="mt-3 text-[16px] font-semibold">{title}</div>
-                  <div className="mt-1 text-[13.5px] leading-relaxed text-steel">{job}</div>
-                  {p && <div className="mt-4 text-[12px] text-steel-400">{p.full_name}</div>}
-                </button>
-              );
-            })}
-          </div>
+          <div className="floating-note"><span className="note-icon"><Check size={17}/></span><div><strong>{id ? 'Anda yang menyetujui.' : 'You give the approval.'}</strong><span>{id ? 'AI membantu keputusan.' : 'AI supports the decision.'}</span></div></div>
+          <button className="motion-toggle" onClick={() => setPaused(!paused)} aria-pressed={paused}>{paused ? <Play size={12}/> : <Pause size={12}/>} {paused ? (id ? 'Putar animasi' : 'Play motion') : (id ? 'Jeda animasi' : 'Pause motion')}</button>
         </div>
       </section>
-
-      <section className="mx-auto max-w-[1180px] px-6 py-12">
-        <h2 className="text-[22px] font-semibold">{c.painH}</h2>
-        <div className="mt-5 divide-y divide-line rounded-xl ring-1 ring-line">
-          {c.pains.map(([p, a]) => (
-            <div key={p} className="grid gap-2 p-5 md:grid-cols-2 md:gap-8">
-              <p className="text-[15px] text-steel">{p}</p>
-              <p className="text-[15px] font-medium">{a}</p>
-            </div>
-          ))}
-        </div>
-        <p className="mt-8 text-[12.5px] text-steel">{c.foot}</p>
+      <section className="fact-strip" aria-label={id ? 'Lingkup prototipe' : 'Prototype scope'}><div><strong>30<span> min</span></strong><p>{id ? 'Horizon prakiraan' : 'Forecast horizon'}</p></div><div><strong>8<span> zones</span></strong><p>{id ? 'Dalam dataset sintetis' : 'In the synthetic dataset'}</p></div><div><strong>100<span>% local</span></strong><p>{id ? 'Ollama & simulator BMS' : 'Ollama & BMS simulator'}</p></div><p className="scope-note">{id ? 'Dibangun untuk menguji ide. Data simulasi, bukan hasil penghematan pabrik.' : 'Built to test an idea. Simulated data, not measured plant savings.'}</p></section>
+      <section id="workflow" className="workflow landing-section" data-reveal>
+        <div className="section-heading"><div><span className="eyebrow">01 / THE DECISION LOOP</span><h2>{id ? 'Dari pembacaan sensor' : 'From sensor reading'}<br/><span>{id ? 'ke keputusan yang tercatat.' : 'to a recorded decision.'}</span></h2></div><p>{id ? 'Setiap langkah punya alasan. Setiap perubahan membutuhkan orang yang bertanggung jawab.' : 'Every step has a reason. Every change needs an accountable person.'}</p></div>
+        <div className="workflow-grid">{stages.map((item, i) => <button key={item.label} aria-pressed={stage === i} onClick={() => setStage(i)} className={`workflow-step ${stage === i ? 'selected' : ''}`}><div className="step-top"><span>0{i+1}</span>{i === 0 ? <Activity/> : i === 1 ? <Wind/> : <ShieldCheck/>}</div><h3>{id ? item.title : item.en}</h3><p>{id ? item.text : item.english}</p><span className="step-status">{stage === i ? (id ? 'Ditampilkan pada panel demo' : 'Shown in the demo panel') : (id ? 'Tampilkan pada panel demo' : 'Show in the demo panel')} <ArrowUpRight size={15}/></span></button>)}</div>
       </section>
-    </div>
-  );
+      <section id="explore" className="explore landing-section" data-reveal>
+        <div className="explore-intro"><span className="eyebrow">02 / BUILT TO BE EXAMINED</span><h2>{id ? 'Jangan hanya percaya.' : 'Go beyond the claim.'}<br/><span>{id ? 'Lihat dasarnya.' : 'Examine the evidence.'}</span></h2><p>{id ? 'Baca SOP, periksa prediksi, dan telusuri keputusan. Mulai dari bagian yang paling relevan untuk Anda.' : 'Read SOPs, inspect forecasts, and trace decisions. Start with what matters to you.'}</p><Link href="/dashboard" className="text-link">{id ? 'Jelajahi dashboard' : 'Explore the dashboard'} <ArrowRight size={17}/></Link></div>
+        <div className="explore-links">{[
+          { icon: Activity, name: id ? 'Evaluasi prediksi' : 'Forecast evaluation', desc: id ? 'Prakiraan vs aktual sintetis, RMSE, dan coverage.' : 'Forecasts vs synthetic observations, RMSE, and coverage.', href: '/predictions' },
+          { icon: FileText, name: id ? 'SOP & AI Copilot' : 'SOP & AI Copilot', desc: id ? 'Tanyakan dokumen dengan rujukan ke sumbernya.' : 'Ask questions about documents with source references.', href: '/copilot' },
+          { icon: ShieldCheck, name: id ? 'Laboratorium keputusan' : 'Decision lab', desc: id ? 'Usulkan, tinjau, dan terapkan ke simulator BMS.' : 'Propose, review, and apply to the BMS simulator.', href: '/lab' },
+        ].map(item => <Link href={item.href} key={item.href} className="explore-link"><item.icon size={23}/><div><h3>{item.name}</h3><p>{item.desc}</p></div><ArrowUpRight className="link-arrow" size={22}/></Link>)}</div>
+      </section>
+      <section className="landing-cta" data-reveal><div className="cta-grid" aria-hidden="true"/><span className="eyebrow">LESS WASTE. MORE CLARITY.</span><h2>{id ? 'Langkah kecil pada setpoint.' : 'A small setpoint change.'}<br/>{id ? 'Awal keputusan yang lebih baik.' : 'A better-informed decision.'}</h2><Link href="/lab" className="landing-button light">{id ? 'Coba simulator' : 'Try the simulator'} <ArrowUpRight size={19}/></Link><p>{id ? 'Model fisika belum divalidasi di pabrik. Estimasi energi berlaku untuk kipas dalam simulasi.' : 'Physics model not yet validated in a plant. Energy estimates cover simulated fan operation.'}</p></section>
+    </main>
+    <footer className="landing-footer"><Logo dark={false}/><span>RUAIX © {new Date().getFullYear()} · LOCAL MVP</span><span>{id ? 'Dirancang untuk energi yang lebih bijak.' : 'Designed for more thoughtful energy use.'}</span></footer>
+  </div>;
 }
