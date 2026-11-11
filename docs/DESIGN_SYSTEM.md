@@ -9,7 +9,7 @@ The palette below is derived from the logo, not a separately supplied brand manu
 - Background #F5F8FC; white surface; border #D9E4F0.
 - Secondary text #4C6079 on light surfaces; #C7D9ED on dark surfaces.
 - Existing green/amber/red status colors remain distinct from brand colors.
-- Typography: locally bundled IBM Plex Sans.
+- Typography: locally bundled Plus Jakarta Sans.
 - CSS tokens: app/brand.css; matching Tailwind palette: tailwind.config.ts.
 - Logo: components/Logo.tsx frames `public/brand/ruaix-logo-transparent.png` via CSS to omit its large margins. The transparent version is used without a background panel. A CSS white monochrome treatment preserves readability on dark surfaces.
 - Favicon: app/icon.svg frames the transparent emblem; no shield placeholder remains in the displayed identity.

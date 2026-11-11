@@ -4,7 +4,7 @@ import { useStore } from '@/lib/store';
 import { fmtTime, nf, timeAt, type Meta, type ZoneSeries, type Zone } from '@/lib/data';
 
 const C = { ink: '#0E2A32', teal: '#0F6B70', mint: '#3CC2AE', limit: '#2F9E62', grid: '#E3ECEC', steel: '#51636B', base: '#9DB7BA', hold: '#D2483F' };
-const tick = { fontSize: 11.5, fill: C.steel, fontFamily: 'IBM Plex Sans' };
+const tick = { fontSize: 11.5, fill: C.steel, fontFamily: 'Plus Jakarta Sans' };
 
 function Tip({ active, payload, label, unit }: any) {
   if (!active || !payload?.length) return null;
