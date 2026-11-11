@@ -27,16 +27,17 @@ export default function Home() {
   }, []);
   const current = stages[stage];
   return <div ref={root} className={`landing ${paused ? 'motion-paused' : ''}`}>
+    <a className="landing-skip" href="#main-content">{id ? 'Langsung ke konten' : 'Skip to content'}</a>
     <header className="landing-nav">
       <Link href="/" aria-label="RUAIX home"><Logo dark={false} /></Link>
       <nav aria-label={id ? 'Navigasi utama' : 'Main navigation'}><a href="#workflow">{id ? 'Cara kerja' : 'How it works'}</a><a href="#explore">{id ? 'Jelajahi MVP' : 'Explore MVP'}</a></nav>
       <div className="nav-actions"><button className="language-toggle" onClick={() => setLang(id ? 'en' : 'id')} aria-label={id ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}>{id ? 'EN' : 'ID'}</button><Link className="nav-login" href="/login">{id ? 'Masuk' : 'Sign in'} <ArrowUpRight size={15} /></Link></div>
     </header>
-    <main>
+    <main id="main-content" tabIndex={-1}>
       <section className="landing-hero">
         <div className="hero-copy">
           <div className="eyebrow hero-enter"><span className="status-dot" /> ENERGY INTELLIGENCE / HUMAN CONTROL</div>
-          <h1 className="hero-enter delay-one">{id ? 'Energi lebih bijak.' : 'Smarter energy.'}<br /><span>{id ? 'Kendali tetap' : 'Control stays'}<br />{id ? 'di tangan Anda.' : 'in your hands.'}</span></h1>
+          <h1 className="hero-enter delay-one">{id ? 'Energi lebih bijak.' : 'Smarter energy.'}<br /><span>{id ? 'Kendali tetap di tangan Anda.' : 'Control stays in your hands.'}</span></h1>
           <p className="hero-description hero-enter delay-two">{id ? 'Temukan peluang hemat energi HVAC cleanroom. Prakirakan kondisi, uji batas keselamatan, lalu putuskan bersama QA.' : 'Explore cleanroom HVAC energy savings. Forecast conditions, check safety limits, then decide with QA.'}</p>
           <div className="hero-actions hero-enter delay-two"><Link className="landing-button primary" href="/lab">{id ? 'Buka ruang kendali' : 'Open control room'} <ArrowUpRight size={19} /></Link><a className="text-link" href="#workflow">{id ? 'Lihat cara kerja' : 'See how it works'} <ArrowRight size={17} /></a></div>
           <div className="hero-note hero-enter delay-two"><ShieldCheck size={16} /> {id ? 'MVP lokal · Simulator BMS · Persetujuan manusia' : 'Local MVP · BMS simulator · Human approval'}</div>
@@ -47,8 +48,11 @@ export default function Home() {
             <div className="panel-top"><span><span className="status-dot" /> AERO-SENTINEL AX</span><span className="demo-tag">DEMO</span></div>
             <figure className="landing-airflow">
               <AirflowBackdrop className="landing-airflow-canvas" scale={1.1} lineAlpha={0.5} particleAlpha={0.75} ink="195,214,216" accent="60,194,174" speed={stage === 1 ? 42 / 43 : 1} sway={0.22} paused={paused} />
-              <figcaption>{id ? 'Ilustrasi aliran udara ? HEPA ? return' : 'Airflow illustration ? HEPA ? return'}</figcaption>
+              <figcaption>{id ? 'Ilustrasi aliran udara: HEPA ke return' : 'Airflow illustration: HEPA to return'}</figcaption>
             </figure>
+            <div className="panel-stage-controls" role="group" aria-label={id ? 'Tahap demo' : 'Demo stages'}>
+              {stages.map((item, i) => <button key={item.label} type="button" onClick={() => setStage(i)} aria-pressed={stage === i}>{['01', '02', '03'][i]} <span>{id ? ['Prediksi', 'Periksa', 'Tinjau'][i] : ['Forecast', 'Check', 'Review'][i]}</span></button>)}
+            </div>
             <div className="panel-label">{current.label}</div>
             <div key={stage} className="panel-reading"><strong>{current.value}</strong><span>{current.unit}</span></div>
             <p className="panel-detail">{id ? current.detail : current.detailEn}</p>
@@ -72,6 +76,7 @@ export default function Home() {
       <section id="workflow" className="workflow landing-section" data-reveal>
         <div className="section-heading"><div><span className="eyebrow">01 / THE DECISION LOOP</span><h2>{id ? 'Dari pembacaan sensor' : 'From sensor reading'}<br/><span>{id ? 'ke keputusan yang tercatat.' : 'to a recorded decision.'}</span></h2></div><p>{id ? 'Setiap langkah punya alasan. Setiap perubahan membutuhkan orang yang bertanggung jawab.' : 'Every step has a reason. Every change needs an accountable person.'}</p></div>
         <div className="workflow-grid">{stages.map((item, i) => <button key={item.label} aria-pressed={stage === i} onClick={() => setStage(i)} className={`workflow-step ${stage === i ? 'selected' : ''}`}><div className="step-top"><span>0{i+1}</span>{i === 0 ? <Activity/> : i === 1 ? <Wind/> : <ShieldCheck/>}</div><h3>{id ? item.title : item.en}</h3><p>{id ? item.text : item.english}</p><span className="step-status">{stage === i ? (id ? 'Ditampilkan pada panel demo' : 'Shown in the demo panel') : (id ? 'Tampilkan pada panel demo' : 'Show in the demo panel')} <ArrowUpRight size={15}/></span></button>)}</div>
+        <div className="workflow-feedback" role="status" aria-live="polite"><ShieldCheck size={20}/><p><strong>{id ? current.title : current.en}</strong> {id ? current.text : current.english}</p></div>
       </section>
       <section id="explore" className="explore landing-section" data-reveal>
         <div className="explore-intro"><span className="eyebrow">02 / BUILT TO BE EXAMINED</span><h2>{id ? 'Jangan hanya percaya.' : 'Go beyond the claim.'}<br/><span>{id ? 'Lihat dasarnya.' : 'Examine the evidence.'}</span></h2><p>{id ? 'Baca SOP, periksa prediksi, dan telusuri keputusan. Mulai dari bagian yang paling relevan untuk Anda.' : 'Read SOPs, inspect forecasts, and trace decisions. Start with what matters to you.'}</p><Link href="/dashboard" className="text-link">{id ? 'Jelajahi dashboard' : 'Explore the dashboard'} <ArrowRight size={17}/></Link></div>
