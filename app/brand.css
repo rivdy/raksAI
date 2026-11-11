@@ -15,9 +15,9 @@
   --ruaix-hold-bg: #FBE7E5;
 }
 
-/* Frame the original 1920 x 1080 artwork; no recoloring or image edits. */
-.ruaix-logo{display:inline-flex;flex-shrink:0;align-items:center;padding:6px 10px;border-radius:10px;background:#fff;vertical-align:middle}
-.ruaix-logo-window{position:relative;width:156px;aspect-ratio:1520 / 390;overflow:hidden}
-.ruaix-logo-image{position:absolute;width:126.315789%;max-width:none;height:auto;left:-13.157895%;top:-92.307692%}
-.ruaix-logo-on-dark{box-shadow:0 0 0 1px #ffffff24}
+/* Frame the transparent artwork; no background panel. */
+.ruaix-logo{display:inline-flex;flex-shrink:0;align-items:center;padding:6px 10px;border-radius:10px;background:transparent;vertical-align:middle}
+.ruaix-logo-window{position:relative;width:156px;aspect-ratio:1340 / 350;overflow:hidden}
+.ruaix-logo-image{position:absolute;width:124.776119%;max-width:none;height:auto;left:-12.686567%;top:-88.571429%}
+.ruaix-logo-on-dark .ruaix-logo-image{filter:brightness(0) invert(1)}
 @media(max-width:380px){.ruaix-logo-window{width:128px}.ruaix-logo{padding:5px 7px}}
