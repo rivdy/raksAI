@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
+export { Logo } from '@/components/Logo';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
@@ -18,22 +20,6 @@ const NAV = [
   { href: '/system', key: 'nav_system', icon: Activity },
   { href: '/how-it-works', key: 'nav_how', icon: BookOpen },
 ] as const;
-
-export function Logo({ dark = true }: { dark?: boolean }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden>
-        <rect width="32" height="32" rx="8" fill="#3CC2AE" />
-        <path d="M16 6l8 3.2v6.1c0 5-3.4 9.1-8 10.7-4.6-1.6-8-5.7-8-10.7V9.2L16 6z" fill="#0E2A32" />
-        <path d="M11.5 16.2l3 3 6-6.2" stroke="#3CC2AE" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-      <div className="leading-tight">
-        <div className={clsx('text-[15px] font-semibold', dark ? 'text-white' : 'text-ink')}>RUAIX</div>
-        <div className={clsx('text-[11.5px]', dark ? 'text-[#9DB7BA]' : 'text-steel')}>Cleanroom AI · AX</div>
-      </div>
-    </div>
-  );
-}
 
 export default function Shell({ children }: { children: React.ReactNode }) {
   const { t, lang, setLang, persona, setPersona, replayK, setReplayK, toast, decisions } = useStore();

@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ArrowRight, Wind, ShieldCheck, Activity, FileText, Check, Pause, Play } from 'lucide-react';
-import { Logo } from '@/components/Shell';
+import { Logo } from '@/components/Logo';
 import AirflowBackdrop from '@/components/AirflowBackdrop';
 import { useStore } from '@/lib/store';
 import './landing.css';
@@ -46,7 +46,7 @@ export default function Home() {
           <div className="control-panel">
             <div className="panel-top"><span><span className="status-dot" /> AERO-SENTINEL AX</span><span className="demo-tag">DEMO</span></div>
             <figure className="landing-airflow">
-              <AirflowBackdrop className="landing-airflow-canvas" scale={1.1} lineAlpha={0.5} particleAlpha={0.75} ink="200,236,219" accent="161,246,206" speed={stage === 1 ? 42 / 43 : 1} sway={0.22} paused={paused} />
+              <AirflowBackdrop className="landing-airflow-canvas" scale={1.1} lineAlpha={0.5} particleAlpha={0.75} ink="195,214,216" accent="60,194,174" speed={stage === 1 ? 42 / 43 : 1} sway={0.22} paused={paused} />
               <figcaption>{id ? 'Ilustrasi aliran udara ? HEPA ? return' : 'Airflow illustration ? HEPA ? return'}</figcaption>
             </figure>
             <div className="panel-label">{current.label}</div>
@@ -54,12 +54,12 @@ export default function Home() {
             <p className="panel-detail">{id ? current.detail : current.detailEn}</p>
             <div className="chart-caption"><span>{id ? 'Prakiraan kelembapan' : 'Humidity forecast'}</span><span>+30 MIN</span></div>
             <svg className="hero-chart" viewBox="0 0 420 150" role="img" aria-label={id ? 'Ilustrasi grafik prakiraan kelembapan; bukan data langsung' : 'Illustrative humidity forecast; not live data'}>
-              <defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#a1f6ce" stopOpacity=".24"/><stop offset="100%" stopColor="#a1f6ce" stopOpacity="0"/></linearGradient></defs>
+              <defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3CC2AE" stopOpacity=".24"/><stop offset="100%" stopColor="#3CC2AE" stopOpacity="0"/></linearGradient></defs>
               {[25,65,105,145].map(y => <path key={y} d={`M0 ${y}H420`} stroke="white" strokeOpacity=".08"/>)}
               <path d="M0 99L28 92L52 104L82 66L108 78L135 62L160 77L188 53L213 66L240 50L265 59L290 43L316 55L345 48L372 59L420 45V150H0Z" fill="url(#chart-fill)"/>
-              <path className="forecast-line" d="M0 99L28 92L52 104L82 66L108 78L135 62L160 77L188 53L213 66L240 50L265 59L290 43L316 55L345 48L372 59L420 45" fill="none" stroke="#a1f6ce" strokeWidth="2.5" pathLength="1"/>
-              <path d="M240 0V150" stroke="#a1f6ce" strokeOpacity=".35" strokeDasharray="4 6"/>
-              <circle className="chart-pulse" cx="240" cy="50" r="5" fill="#b8ffdb"/>
+              <path className="forecast-line" d="M0 99L28 92L52 104L82 66L108 78L135 62L160 77L188 53L213 66L240 50L265 59L290 43L316 55L345 48L372 59L420 45" fill="none" stroke="#3CC2AE" strokeWidth="2.5" pathLength="1"/>
+              <path d="M240 0V150" stroke="#3CC2AE" strokeOpacity=".35" strokeDasharray="4 6"/>
+              <circle className="chart-pulse" cx="240" cy="50" r="5" fill="#3CC2AE"/>
             </svg>
             <div className="chart-axis"><span>14:00</span><span>14:15</span><span>14:30</span></div>
             <div className="panel-bottom"><ShieldCheck size={17}/><span>{id ? 'Safety gate sebelum setiap perubahan' : 'Safety gate before every change'}</span></div>

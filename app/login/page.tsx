@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { Logo } from '@/components/Shell';
+import { Logo } from '@/components/Logo';
 import AirflowBackdrop from '@/components/AirflowBackdrop';
 import './login.css';
 
@@ -25,7 +25,7 @@ export default function Login() {
   }
   return <div className="lg">
     {/* ruang bersih 3D: garis hijau tua, sebagian aliran udara hijau aksen */}
-    <AirflowBackdrop className="lg-backdrop" center={0.7} scale={0.72} lineAlpha={0.24} ink="21,60,53" accent="22,130,103" />
+    <AirflowBackdrop className="lg-backdrop" center={0.7} scale={0.72} lineAlpha={0.24} ink="0,47,106" accent="60,194,174" />
 
     <header className="lg-top">
       <Link href="/" aria-label="RUAIX"><Logo dark={false} /></Link>

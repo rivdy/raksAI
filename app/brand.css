@@ -1,0 +1,23 @@
+/* RUAIX palette derived from the supplied navy and mint logo. Shared by landing, login and app shell. */
+:root {
+  --ruaix-ink: #002F6A;
+  --ruaix-teal: #064783;
+  --ruaix-teal-hover: #002656;
+  --ruaix-mint: #3CC2AE;
+  --ruaix-background: #F5F8FC;
+  --ruaix-surface: #FFFFFF;
+  --ruaix-soft: #EAF2FA;
+  --ruaix-mint-soft: #E4F7F3;
+  --ruaix-line: #D9E4F0;
+  --ruaix-text-muted: #4C6079;
+  --ruaix-on-dark: #C7D9ED;
+  --ruaix-hold: #A1322B;
+  --ruaix-hold-bg: #FBE7E5;
+}
+
+/* Frame the original 1920 x 1080 artwork; no recoloring or image edits. */
+.ruaix-logo{display:inline-flex;flex-shrink:0;align-items:center;padding:6px 10px;border-radius:10px;background:#fff;vertical-align:middle}
+.ruaix-logo-window{position:relative;width:156px;aspect-ratio:1520 / 390;overflow:hidden}
+.ruaix-logo-image{position:absolute;width:126.315789%;max-width:none;height:auto;left:-13.157895%;top:-92.307692%}
+.ruaix-logo-on-dark{box-shadow:0 0 0 1px #ffffff24}
+@media(max-width:380px){.ruaix-logo-window{width:128px}.ruaix-logo{padding:5px 7px}}

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root { color-scheme: light; }
-html, body { background: #F6F9F9; color: #0E2A32; }
+html, body { background: var(--ruaix-background); color: var(--ruaix-ink); }
 body { font-feature-settings: 'tnum' 1, 'cv01' 1; -webkit-font-smoothing: antialiased; }
 .num { font-variant-numeric: tabular-nums; }
 :focus-visible { outline: 2px solid #3CC2AE; outline-offset: 2px; border-radius: 6px; }
@@ -13,3 +13,11 @@ body { font-feature-settings: 'tnum' 1, 'cv01' 1; -webkit-font-smoothing: antial
 input[type=range].replay { accent-color: #3CC2AE; }
 @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .rise { animation: rise .35s cubic-bezier(.2,0,0,1) both; }
+
+/* Consistent primary workspace navigation. */
+.workspace-nav{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:20px;padding:12px;border:1px solid var(--ruaix-line);border-radius:12px;background:var(--ruaix-surface)}
+.workspace-nav a,.workspace-nav button{padding:9px 12px;border-radius:7px;font-size:13px;font-weight:500;transition:background .2s,color .2s}
+.workspace-nav a:hover,.workspace-nav button:hover{background:var(--ruaix-soft);color:var(--ruaix-teal)}
+.workspace-nav a[aria-current=page]{background:var(--ruaix-teal);color:white}
+.workspace-account{margin-left:auto;color:var(--ruaix-text-muted);font-size:12px}
+@media(max-width:640px){.workspace-account{width:100%;margin-left:12px}.workspace-nav a{flex:1;text-align:center}}
