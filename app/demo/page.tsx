@@ -13,21 +13,21 @@ const f=(n:number)=>n.toLocaleString('id-ID',{maximumFractionDigits:2});
 export default function Demo(){
  const [roomIndex,setRoomIndex]=useState(0);
  const room=demoRooms[roomIndex],zone=room.zone,initial=room.initial;
- const [step,setStep]=useState(0),[target,setTarget]=useState(42),[scenario,setScenario]=useState('normal');
+ const [step,setStep]=useState(0),[target,setTarget]=useState(40),[scenario,setScenario]=useState('normal');
  const [decision,setDecision]=useState<'pending'|'approved'|'rejected'>('pending');
  const [comment,setComment]=useState(''),[question,setQuestion]=useState(false);
  const reading={...initial,quality_code:scenario==='sensor'?1:0};
  const result=forecast(zone,reading,target),pass=result.gate.decision==='LULUS';
  const applied=pass&&decision==='approved';
- const reset=()=>{setRoomIndex(0);setStep(0);setTarget(42);setScenario('normal');setDecision('pending');setComment('');setQuestion(false);};
+ const reset=()=>{setRoomIndex(0);setStep(0);setTarget(40);setScenario('normal');setDecision('pending');setComment('');setQuestion(false);};
  const change=(value:number)=>{setTarget(value);setDecision('pending');setComment('');};
  return <div className="public-demo">
   <header className="demo-nav"><Link href="/" aria-label="Beranda RUAIX"><Logo dark={false}/></Link><span>DEMO PUBLIK / TANPA LOGIN</span><Link href="/login">Masuk aplikasi</Link></header>
   <main className="demo-main">
    <div className="demo-intro"><div><p className="demo-eyebrow">SATU KEPUTUSAN, DARI AWAL SAMPAI AKHIR</p><h1>Coba cara kerja RUAIX.</h1><p>Berperan sebagai Engineer dan QA dalam tur presentasi. Semua tindakan hanya berlangsung di browser ini.</p></div><button onClick={reset}>Ulangi demo</button></div>
-   <p className="demo-disclaimer">Data sintetis, model belum dikalibrasi di pabrik. Energi hanya kipas. Persetujuan di sini adalah ilustrasi, bukan autentikasi QA atau kendali BMS nyata.</p>
+   <p className="demo-disclaimer">Skenario presentasi sintetis dengan kontras diperjelas, bukan data pengukuran. Model belum dikalibrasi di pabrik. Energi hanya kipas. Persetujuan di sini adalah ilustrasi, bukan autentikasi QA atau kendali BMS nyata.</p>
    <nav className="demo-steps" aria-label="Tahap presentasi">{steps.map((label,i)=><button key={label} onClick={()=>setStep(i)} aria-current={step===i?'step':undefined}><span>{i+1}</span>{label}</button>)}</nav>
-   <div className="process-tabs" role="group" aria-label="Pilih proses produksi">{demoRooms.map((r,i)=><button key={r.id} aria-pressed={roomIndex===i} onClick={()=>{setRoomIndex(i);setScenario('normal');change(42);}}><span>0{i+1}</span><strong>{r.name}</strong><small>{r.description}</small></button>)}</div>
+   <div className="process-tabs" role="group" aria-label="Pilih proses produksi">{demoRooms.map((r,i)=><button key={r.id} aria-pressed={roomIndex===i} onClick={()=>{setRoomIndex(i);setScenario('normal');change(40);}}><span>0{i+1}</span><strong>{r.name}</strong><small>{r.description}</small></button>)}</div>
    <CleanroomStory step={step} target={target} applied={applied} sensorBad={scenario==='sensor'} room={room} result={result}/>
 
    <div className="demo-layout">
@@ -35,7 +35,7 @@ export default function Demo(){
      <p className="demo-eyebrow">LANGKAH {step+1} / {steps.length}</p><h2 id="demo-title">{steps[step]}</h2>
      {step===0&&<>
       <p>Bayangkan ruangan produksi obat yang harus dijaga kondisinya. Engineer memulai dari kondisi ruang {room.name}. Pilih skenario untuk menunjukkan perubahan kecil yang lolos, usulan agresif yang ditahan, atau kualitas sensor yang bermasalah.</p>
-      <label>Skenario<select value={scenario} onChange={e=>{setScenario(e.target.value);change(e.target.value==='aggressive'?38:42);}}><option value="normal">Operasi normal: 43 ke 42 Hz</option><option value="aggressive">Usulan agresif: 43 ke 38 Hz</option><option value="sensor">Kualitas sensor buruk</option></select></label>
+      <label>Skenario<select value={scenario} onChange={e=>{setScenario(e.target.value);change(e.target.value==='aggressive'?38:40);}}><option value="normal">Demo hemat energi: 43 ke 40 Hz</option><option value="aggressive">Usulan agresif: 43 ke 38 Hz</option><option value="sensor">Kualitas sensor buruk</option></select></label>
       <div className="demo-stats">{[['Suhu',f(reading.temperature_c)+' C'],['RH',f(reading.rh_pct)+'%'],['Beda tekanan',f(reading.dp_pa)+' Pa']].map(([a,b])=><div key={a}><span>{a}</span><strong>{b}</strong></div>)}</div>
       <label>Usulan frekuensi kipas: <strong>{target} Hz</strong><input type="range" min="38" max="47" step="1" value={target} onChange={e=>change(Number(e.target.value))}/></label>
       <p className="demo-small">Sumber: {room.source} Perubahan input membatalkan keputusan QA demo sebelumnya.</p>
@@ -51,7 +51,7 @@ export default function Demo(){
       <div className={pass?'demo-pass':'demo-hold'}><strong>{pass?'LULUS PEMERIKSAAN SIMULASI':'TAHAN USULAN'}</strong><p>{pass?'Usulan dapat ditinjau QA. Belum ada setelan yang diubah.':'Potensi penghematan tidak cukup untuk melanjutkan usulan yang gagal pemeriksaan.'}</p></div>
       {result.gate.reasons.length>0&&<ul>{result.gate.reasons.map(reason=><li key={reason}>{reason}</li>)}</ul>}
       <p>Pemeriksaan mencakup kualitas sensor, tahap produksi, rentang dan besar perubahan frekuensi, serta lintasan suhu, RH, dan tekanan beserta margin.</p>
-      {!pass&&<button onClick={()=>{setScenario('normal');change(42);setStep(1);}}>Coba usulan lebih kecil dengan sensor baik</button>}
+      {!pass&&<button onClick={()=>{setScenario('normal');change(40);setStep(1);}}>Coba usulan lebih kecil dengan sensor baik</button>}
      </>}
      {step===3&&<>
       <p>Dalam aplikasi utama, persetujuan membutuhkan akun QA berbeda dari pengusul. Pada tur ini, Anda mencoba alurnya sebagai ilustrasi.</p>
